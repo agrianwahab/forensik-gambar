@@ -10,6 +10,7 @@ import io
 
 # ======================= TAMBAHKAN IMPORT INI DI ATAS =======================
 import signal # Diperlukan untuk mematikan proses di terminal
+from utils import load_analysis_history # Import untuk memuat riwayat
 
 
 # ======================= (Fungsi-fungsi Anda yang lain tetap sama) =======================

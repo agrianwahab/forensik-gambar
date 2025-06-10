@@ -1,0 +1,24 @@
+[
+    {
+        "timestamp": "2025-06-10 13:51:31",
+        "image_name": "test_image_01.jpg",
+        "analysis_summary": {
+            "type": "Splicing Detected",
+            "confidence": "High",
+            "copy_move_score": 20,
+            "splicing_score": 85
+        },
+        "processing_time": "12.34s"
+    },
+    {
+        "timestamp": "2025-06-10 13:51:31",
+        "image_name": "test_image_02.png",
+        "analysis_summary": {
+            "type": "Copy-Move Detected",
+            "confidence": "Medium",
+            "copy_move_score": 70,
+            "splicing_score": 10
+        },
+        "processing_time": "8.76s"
+    }
+]
