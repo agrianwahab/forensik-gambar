@@ -5,6 +5,8 @@ Utility functions for Forensic Image Analysis System
 import numpy as np
 from scipy.stats import entropy
 import warnings
+import json
+from datetime import datetime
 warnings.filterwarnings('ignore')
 
 def detect_outliers_iqr(data, factor=1.5):
@@ -45,3 +47,36 @@ def safe_divide(numerator, denominator, default=0.0):
     if denominator == 0:
         return default
     return numerator / denominator
+
+HISTORY_FILE = 'analysis_history.json'
+
+def save_analysis_to_history(image_name, analysis_summary, processing_time):
+    """Saves the analysis summary to a history file."""
+    try:
+        history = load_analysis_history()
+    except (FileNotFoundError, json.JSONDecodeError):
+        history = []
+
+    entry = {
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'image_name': image_name,
+        'analysis_summary': analysis_summary,
+        'processing_time': processing_time
+    }
+    history.append(entry)
+
+    with open(HISTORY_FILE, 'w') as f:
+        json.dump(history, f, indent=4)
+
+def load_analysis_history():
+    """Loads the analysis history from a file."""
+    try:
+        with open(HISTORY_FILE, 'r') as f:
+            history = json.load(f)
+    except FileNotFoundError:
+        print(f"History file '{HISTORY_FILE}' not found. Returning empty list.")
+        history = []
+    except json.JSONDecodeError:
+        print(f"Error decoding JSON from '{HISTORY_FILE}'. Returning empty list.")
+        history = []
+    return history

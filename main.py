@@ -16,34 +16,17 @@ import sys
 import os
 import time
 import argparse
-from PIL import Image#!/usr/bin/env python3
-"""
-Advanced Forensic Image Analysis System v2.0
-Main execution file
-
-Usage:
-    python main.py <image_path> [options]
-
-Example:
-    python main.py test_image.jpg
-    python main.py test_image.jpg --export-all
-    python main.py test_image.jpg --output-dir ./results
-"""
-
-import sys
-import os
-import time
-import argparse
 import numpy as np    # PERBAIKAN: Tambah import numpy
 import cv2           # PERBAIKAN: Tambah import cv2
 from PIL import Image
+from utils import save_analysis_to_history
 
 # Import semua modul
 from validation import validate_image_file, extract_enhanced_metadata, advanced_preprocess_image
 from ela_analysis import perform_multi_quality_ela
 from feature_detection import extract_multi_detector_features
 from copy_move_detection import detect_copy_move_advanced, detect_copy_move_blocks, kmeans_tampering_localization
-from advanced_analysis import (analyze_noise_consistency, analyze_frequency_domain, 
+from advanced_analysis import (analyze_noise_consistency, analyze_frequency_domain,
                               analyze_texture_consistency, analyze_edge_consistency,
                               analyze_illumination_consistency, perform_statistical_analysis)
 from jpeg_analysis import advanced_jpeg_analysis, jpeg_ghost_analysis
@@ -58,13 +41,13 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
     print(f"ADVANCED FORENSIC IMAGE ANALYSIS SYSTEM v2.0")
     print(f"Enhanced Detection: Copy-Move, Splicing, Authentic Images")
     print(f"{'='*80}\n")
-    
+
     start_time = time.time()
-    
+
     # Create output directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    
+
     # 1. Validation
     try:
         validate_image_file(image_path)
@@ -72,7 +55,7 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
     except Exception as e:
         print(f"❌ Validation error: {e}")
         return None
-    
+
     # 2. Load image
     try:
         original_image = Image.open(image_path)
@@ -81,53 +64,53 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
     except Exception as e:
         print(f"❌ Error loading image: {e}")
         return None
-    
+
     # 3. Enhanced metadata extraction
     print("🔍 [3/17] Extracting enhanced metadata...")
     metadata = extract_enhanced_metadata(image_path)
     print(f"  Authenticity Score: {metadata['Metadata_Authenticity_Score']}/100")
-    
+
     # 4. Advanced preprocessing
     print("🔧 [4/17] Advanced preprocessing...")
     preprocessed, original_preprocessed = advanced_preprocess_image(original_image.copy())
-    
+
     # 5. Multi-quality ELA
     print("📊 [5/17] Multi-quality Error Level Analysis...")
     ela_image, ela_mean, ela_std, ela_regional, ela_quality_stats, ela_variance = perform_multi_quality_ela(preprocessed.copy())
     print(f"  ELA Stats: μ={ela_mean:.2f}, σ={ela_std:.2f}, Regions={ela_regional['outlier_regions']}")
-    
+
     # 6. Multi-detector feature extraction
     print("🎯 [6/17] Multi-detector feature extraction...")
     feature_sets, roi_mask, gray_enhanced = extract_multi_detector_features(
         preprocessed.copy(), ela_image, ela_mean, ela_std)
     total_features = sum(len(kp) for kp, _ in feature_sets.values())
     print(f"  Total keypoints: {total_features}")
-    
+
     # 7. Advanced copy-move detection
     print("🔄 [7/17] Advanced copy-move detection...")
     ransac_matches, ransac_inliers, transform = detect_copy_move_advanced(
         feature_sets, preprocessed.size)
     print(f"  RANSAC inliers: {ransac_inliers}")
-    
+
     # 8. Enhanced block matching
     print("🧩 [8/17] Enhanced block-based detection...")
     block_matches = detect_copy_move_blocks(preprocessed)
     print(f"  Block matches: {len(block_matches)}")
-    
+
     # 9. Advanced noise analysis
     print("📡 [9/17] Advanced noise consistency analysis...")
     noise_analysis = analyze_noise_consistency(preprocessed)
     print(f"  Noise inconsistency: {noise_analysis['overall_inconsistency']:.3f}")
-    
+
     # 10. Advanced JPEG analysis
     print("📷 [10/17] Advanced JPEG artifact analysis...")
     try:
         from jpeg_analysis import advanced_jpeg_analysis, jpeg_ghost_analysis
         jpeg_analysis = advanced_jpeg_analysis(preprocessed)
-        
+
         # Robust handling untuk return values dari jpeg_ghost_analysis
         jpeg_ghost_result = jpeg_ghost_analysis(preprocessed)
-        
+
         if len(jpeg_ghost_result) == 2:
             ghost_map, ghost_suspicious = jpeg_ghost_result
             ghost_analysis_details = {}
@@ -135,10 +118,10 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
             ghost_map, ghost_suspicious, ghost_analysis_details = jpeg_ghost_result
         else:
             raise ValueError(f"Unexpected return values from jpeg_ghost_analysis: {len(jpeg_ghost_result)}")
-        
+
         ghost_ratio = np.sum(ghost_suspicious) / ghost_suspicious.size
         print(f"  JPEG anomalies: {ghost_ratio:.1%}")
-        
+
     except Exception as e:
         print(f"  ⚠ JPEG analysis failed: {e}")
         # Fallback values
@@ -154,32 +137,32 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
         ghost_analysis_details = {}
         ghost_ratio = 0.0
 
-    
+
     # 11. Frequency domain analysis
     print("🌊 [11/17] Frequency domain analysis...")
     frequency_analysis = analyze_frequency_domain(preprocessed)
     print(f"  Frequency inconsistency: {frequency_analysis['frequency_inconsistency']:.3f}")
-    
+
     # 12. Texture consistency analysis
     print("🧵 [12/17] Texture consistency analysis...")
     texture_analysis = analyze_texture_consistency(preprocessed)
     print(f"  Texture inconsistency: {texture_analysis['overall_inconsistency']:.3f}")
-    
+
     # 13. Edge consistency analysis
     print("📐 [13/17] Edge density analysis...")
     edge_analysis = analyze_edge_consistency(preprocessed)
     print(f"  Edge inconsistency: {edge_analysis['edge_inconsistency']:.3f}")
-    
+
     # 14. Illumination analysis
     print("💡 [14/17] Illumination consistency analysis...")
     illumination_analysis = analyze_illumination_consistency(preprocessed)
     print(f"  Illumination inconsistency: {illumination_analysis['overall_illumination_inconsistency']:.3f}")
-    
+
     # 15. Statistical analysis
     print("📈 [15/17] Statistical analysis...")
     statistical_analysis = perform_statistical_analysis(preprocessed)
     print(f"  Overall entropy: {statistical_analysis['overall_entropy']:.3f}")
-    
+
     # Prepare comprehensive results
     analysis_results = {
         'metadata': metadata,
@@ -211,20 +194,20 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
         'roi_mask': roi_mask,
         'enhanced_gray': gray_enhanced
     }
-    
+
     # 16. Advanced tampering localization
     print("🎯 [16/17] Advanced tampering localization...")
     localization_results = advanced_tampering_localization(preprocessed, analysis_results)
     print(f"  Tampering area: {localization_results['tampering_percentage']:.1f}% of image")
-    
+
     # 17. Advanced classification
     print("🤖 [17/17] Advanced manipulation classification...")
     classification = classify_manipulation_advanced(analysis_results)
     analysis_results['classification'] = classification
     analysis_results['localization_analysis'] = localization_results
-    
+
     processing_time = time.time() - start_time
-    
+
     print(f"\n{'='*80}")
     print(f"ANALYSIS COMPLETE - Processing Time: {processing_time:.2f}s")
     print(f"{'='*80}")
@@ -234,42 +217,57 @@ def analyze_image_comprehensive_advanced(image_path, output_dir="./results"):
     print(f"📊 Splicing Score: {classification['splicing_score']}/100")
     print(f"📊 Processing Time: {processing_time:.2f}s")
     print(f"{'='*80}\n")
-    
+
     if classification['details']:
         print("📋 Detection Details:")
         for detail in classification['details']:
             print(f"  {detail}")
         print()
-    
+
+    # Log analysis to history
+    try:
+        image_filename = os.path.basename(image_path)
+        analysis_summary_for_history = {
+            'type': classification.get('type', 'N/A'),
+            'confidence': classification.get('confidence', 'N/A'),
+            # Add any other key details you want in the summary for history
+            'copy_move_score': classification.get('copy_move_score', 0),
+            'splicing_score': classification.get('splicing_score', 0)
+        }
+        save_analysis_to_history(image_filename, analysis_summary_for_history, f"{processing_time:.2f}s")
+        print("💾 Analysis results saved to history.")
+    except Exception as e:
+        print(f"⚠️ Failed to save analysis to history: {e}")
+
     return analysis_results
 
 def advanced_tampering_localization(image_pil, analysis_results):
     """Advanced tampering localization menggunakan multiple methods"""
     print("🎯 Advanced tampering localization...")
-    
+
     ela_image = analysis_results['ela_image']
-    
+
     # 1. K-means based localization
     kmeans_result = kmeans_tampering_localization(image_pil, ela_image)
-    
+
     # 2. Threshold-based localization
     ela_array = np.array(ela_image)
     threshold = analysis_results['ela_mean'] + 2 * analysis_results['ela_std']
     threshold_mask = ela_array > threshold
-    
+
     # 3. Combined localization
     combined_mask = np.logical_or(
         kmeans_result['tampering_mask'],
         threshold_mask
     )
-    
+
     # Morphological operations untuk clean up
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
     combined_mask = cv2.morphologyEx(combined_mask.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
     combined_mask = cv2.morphologyEx(combined_mask, cv2.MORPH_OPEN, kernel)
-    
+
     h, w = ela_array.shape
-    
+
     return {
         'kmeans_localization': kmeans_result,
         'threshold_mask': threshold_mask,
@@ -280,7 +278,7 @@ def advanced_tampering_localization(image_pil, analysis_results):
 def main():
     parser = argparse.ArgumentParser(description='Advanced Forensic Image Analysis System v2.0')
     parser.add_argument('image_path', help='Path to the image file to analyze')
-    parser.add_argument('--output-dir', '-o', default='./results', 
+    parser.add_argument('--output-dir', '-o', default='./results',
                        help='Output directory for results (default: ./results)')
     parser.add_argument('--export-all', '-e', action='store_true',
                        help='Export complete package (PNG, PDF, DOCX, etc.)')
@@ -288,29 +286,29 @@ def main():
                        help='Export only visualization')
     parser.add_argument('--export-report', '-r', action='store_true',
                        help='Export only DOCX report')
-    
+
     args = parser.parse_args()
-    
+
     # Check if image file exists
     if not os.path.exists(args.image_path):
         print(f"❌ Error: Image file '{args.image_path}' not found!")
         sys.exit(1)
-    
+
     # Run analysis
     try:
         analysis_results = analyze_image_comprehensive_advanced(args.image_path, args.output_dir)
-        
+
         if analysis_results is None:
             print("❌ Analysis failed!")
             sys.exit(1)
-        
+
         # Load original image for export
         original_image = Image.open(args.image_path)
-        
+
         # Create base filename
         base_filename = os.path.splitext(os.path.basename(args.image_path))[0]
         base_path = os.path.join(args.output_dir, base_filename)
-        
+
         # Export based on arguments
         if args.export_all:
             print("\n📦 Exporting complete package...")
@@ -326,9 +324,9 @@ def main():
             # Default: export visualization
             print("\n📊 Exporting basic visualization...")
             visualize_results_advanced(original_image, analysis_results, f"{base_path}_analysis.png")
-        
+
         print("✅ Analysis completed successfully!")
-        
+
     except KeyboardInterrupt:
         print("\n❌ Analysis interrupted by user!")
         sys.exit(1)
